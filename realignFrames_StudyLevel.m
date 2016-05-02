@@ -29,3 +29,5 @@ for iW = 3:length(WorkFolderContent),
 %     TT.file_format = 'Nifti';
     %
 end
+
+fprintf('%s','Success');
