@@ -1,7 +1,7 @@
-function batchConvertOSLOnifti(imagesDirFlut)
+function batchConvertOSLOnifti_FDG(imagesDirFDG)
 % This function would prepare the subject specific folder preivous to analysis
 % It will : 
-% - transform Flut DICOM to Nifti files and copy them in the subject specific folder FLUT
+% - transform FDG DICOM to Nifti files and copy them in the subject specific folder FDG
 % ----------------------------------------------------------
 % ----------------------------------------------------------
 
@@ -17,7 +17,7 @@ ImConvertOptions.ConvOptions.SourceData.SourceFormat.formatName = 'Dicom2D';
 ImConvertOptions.ConvOptions.SourceData.SourceFormat.formatNo = 1;
 ImConvertOptions.ConvOptions.SourceData.processDicomBlind = true;
 ImConvertOptions.ConvOptions.OutputDims.dimSpec = 'auto';
-ImConvertOptions.ConvOptions.OutputDims.nDims = 4;
+ImConvertOptions.ConvOptions.OutputDims.nDims = 3;
 ImConvertOptions.ConvOptions.OutputDims.dimensions = [NaN NaN NaN NaN];
 ImConvertOptions.ConvOptions.Orientation.flipX = false;
 ImConvertOptions.ConvOptions.Orientation.flipY = true;
@@ -42,7 +42,7 @@ ImConvertOptions.LogOptions.sectionTitle = '';
 % cd(imagesDir);
 % patientBirthDate = [];
 % clear MasterV
-ImagesDirContent = dir(imagesDirFlut);
+ImagesDirContent = dir(imagesDirFDG);
 iC = 0;
 for iL=1:length(ImagesDirContent);
     if ImagesDirContent(iL).isdir & logical(strfind(ImagesDirContent(iL).name,'Discovery690')),
@@ -57,22 +57,22 @@ for iLL = 1:length(DynScanContent),
     if ~exist(fullfile(conversionFolder,subjName),'dir'),
         mkdir(conversionFolder,subjName);
     end
-    subjectFolder = fullfile(conversionFolder,subjName,'flut');
+    subjectFolder = fullfile(conversionFolder,subjName,'fdg');
     if ~exist(subjectFolder,'dir'),
         mkdir(subjectFolder);
     end
     %
-    SubjDirContent = dir(fullfile(imagesDirFlut,DynScanContent(iLL).name));
+    SubjDirContent = dir(fullfile(imagesDirFDG,DynScanContent(iLL).name));
     %
     for iK = 1:length(SubjDirContent),
-        if SubjDirContent(iK).isdir & logical(strfind(SubjDirContent(iK).name,'PET_AC_Dyn')),
-            DicomFilesACContent = dir(fullfile(imagesDirFlut,...
+        if SubjDirContent(iK).isdir & logical(strfind(SubjDirContent(iK).name,'PET_3D_AC')),
+            DicomFilesACContent = dir(fullfile(imagesDirFDG,...
                 DynScanContent(iLL).name,SubjDirContent(iK).name,'*.dcm'));
             if isempty(DicomFilesACContent),
                 error('wdfasdg');
             end
             
-            ImConvertOptions.InputFiles.filesPath  = fullfile(imagesDirFlut,...
+            ImConvertOptions.InputFiles.filesPath  = fullfile(imagesDirFDG,...
                 DynScanContent(iLL).name,SubjDirContent(iK).name);
             ImConvertOptions.OutputFiles.filesPath = subjectFolder;
             ImConvertOptions.InputFiles.filenames       = {DicomFilesACContent(:).name};
@@ -159,14 +159,14 @@ for iLL = 1:length(DynScanContent),
         
         
         
-        if SubjDirContent(iK).isdir & logical(strfind(SubjDirContent(iK).name,'PET_NAC_Dyn')),
-            DicomFilesACContent = dir(fullfile(imagesDirFlut,...
+        if SubjDirContent(iK).isdir & logical(strfind(SubjDirContent(iK).name,'PET_3D_NAC')),
+            DicomFilesACContent = dir(fullfile(imagesDirFDG,...
                 DynScanContent(iLL).name,SubjDirContent(iK).name,'*.dcm'));
             if isempty(DicomFilesACContent),
                 error('wdfasdg');
             end
             
-            ImConvertOptions.InputFiles.filesPath  = fullfile(imagesDirFlut,...
+            ImConvertOptions.InputFiles.filesPath  = fullfile(imagesDirFDG,...
                 DynScanContent(iLL).name,SubjDirContent(iK).name);
             ImConvertOptions.OutputFiles.filesPath = subjectFolder;
             ImConvertOptions.InputFiles.filenames       = {DicomFilesACContent(:).name};
