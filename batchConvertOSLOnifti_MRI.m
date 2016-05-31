@@ -46,10 +46,20 @@ for iLL = 1:length(DynScanContent),
                 error('wdfasdg');
             end
             fprintf('\nCopying subj %s MRI\n',subjName);
-            
-                copyfile(fullfile(imagesDirMRI,DynScanContent(iLL).name,...
+            % Copy all files
+            copyfile(fullfile(imagesDirMRI,DynScanContent(iLL).name,...
                     SubjDirContent(iK).name,'*'),subjectFolder,'f')
-
+            % Convert the ones intersting
+            intVols    = {'T1','brain','aparc+aseg'};
+            for iF = 1:length(intVols),
+            if exist(fullfile(subjectFolder,[intVols{iF} '.mgz']),'file'),
+                fprintf('\nConverting subj %s - %s\n',subjName,[intVols{iF} '.mgz']);
+            cmdMriConv = sprintf('mri_convert -it mgz -ot nii --out_orientation LAS %s %s',...
+                fullfile(subjectFolder,[intVols{iF} '.mgz']),...
+                fullfile(subjectFolder,[intVols{iF} '.nii']));
+            system(cmdMriConv);
+            end
+            end
             %
         end
 
