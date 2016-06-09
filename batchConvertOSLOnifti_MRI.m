@@ -1,6 +1,6 @@
-function batchConvertOSLOnifti_FDG(imagesDirMRI)
+function batchConvertOSLOnifti_MRI(imagesDirMRI)
 % This function would prepare the subject specific folder preivous to analysis
-% 
+%
 % - copy the T1.mgz and Freesurfer segmentations to the subject specific folder MRI
 % ----------------------------------------------------------
 % ----------------------------------------------------------
@@ -31,9 +31,9 @@ for iLL = 1:length(DynScanContent),
         mkdir(conversionFolder,subjName);
     end
     subjectFolder = fullfile(conversionFolder,subjName,'mri');
-    if ~exist(subjectFolder,'dir'),
-        mkdir(subjectFolder);
-    end
+%     if ~exist(subjectFolder,'dir'),
+%         mkdir(subjectFolder);
+%     end
     %
     SubjDirContent = dir(fullfile(imagesDirMRI,DynScanContent(iLL).name));
     %
@@ -47,22 +47,24 @@ for iLL = 1:length(DynScanContent),
             end
             fprintf('\nCopying subj %s MRI\n',subjName);
             % Copy all files
-            copyfile(fullfile(imagesDirMRI,DynScanContent(iLL).name,...
-                    SubjDirContent(iK).name,'*'),subjectFolder,'f')
+            system(sprintf('cp -fR %s %s',fullfile(imagesDirMRI,DynScanContent(iLL).name,...
+                SubjDirContent(iK).name),fullfile(conversionFolder,subjName)));
             % Convert the ones intersting
-            intVols    = {'T1','brain','aparc+aseg'};
+            intVols    = {'T1','brain','aparc+aseg','wmparc'};
+            intVolsInterp = {'interpolate','interpolate','nearest','nearest'};
             for iF = 1:length(intVols),
-            if exist(fullfile(subjectFolder,[intVols{iF} '.mgz']),'file'),
-                fprintf('\nConverting subj %s - %s\n',subjName,[intVols{iF} '.mgz']);
-            cmdMriConv = sprintf('mri_convert -it mgz -ot nii --out_orientation LAS %s %s',...
-                fullfile(subjectFolder,[intVols{iF} '.mgz']),...
-                fullfile(subjectFolder,[intVols{iF} '.nii']));
-            system(cmdMriConv);
-            end
+                if exist(fullfile(subjectFolder,[intVols{iF} '.mgz']),'file'),
+                    fprintf('\nConverting subj %s - %s\n',subjName,[intVols{iF} '.mgz']);
+                    cmdMriConv = sprintf('mri_convert -it mgz -ot nii --out_orientation LAS -rt %s %s %s',...
+                        intVolsInterp{iF},...
+                        fullfile(subjectFolder,[intVols{iF} '.mgz']),...
+                        fullfile(subjectFolder,[intVols{iF} '.nii']));
+                    system(cmdMriConv);
+                end
             end
             %
         end
-
+        
         
     end
     

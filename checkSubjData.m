@@ -19,6 +19,7 @@ for iL=1:length(SubjectsDirContent);
         DynScanContent(iC) = SubjectsDirContent(iL);
     end
 end
+iCC = 0;
 for iLL = 1:length(DynScanContent),
     %
     SubjDirContent = dir(fullfile(subjFolder,DynScanContent(iLL).name));
@@ -26,16 +27,17 @@ for iLL = 1:length(DynScanContent),
     [isImgDir,idxDir]=ismember(examDir,{SubjDirContent(:).name});
     %
     if all(isImgDir),
-        fprintf('\n - Subj %s does have the three folders',DynScanContent(iLL).name);
-        SubjStruct(iLL).subjID = DynScanContent(iLL).name;
+        fprintf('\n - Subj %s does have the three folders\n',DynScanContent(iLL).name);
+        iCC = iCC+1;
+        SubjStruct(iCC).subjID = DynScanContent(iLL).name;
         for iF = 1:3,
             ExamDirContent = dir(fullfile(subjFolder,DynScanContent(iLL).name,examDir{iF},'*.nii'));
             if ~isempty(ExamDirContent),
                 fprintf('');
-                for iD = 1:length(ExamDirContent);
-                SubjStruct(iLL).(examDir{iF}).Images(iD).ImageDetails = processImageInput(fullfile(subjFolder,...
-                    DynScanContent(iLL).name,examDir{iF},ExamDirContent(iD).name));
-                SubjStruct(iLL).(examDir{iF}).Images(iD).descrip    = ExamDirContent(iD).name;
+                for iD = 1:length(ExamDirContent),
+                SubjStruct(iCC).(examDir{iF}).Images(iD).ImageDetails = processImageInput(fullfile(subjFolder,...
+                    DynScanContent(iLL).name,examDir{iF},ExamDirContent(iD).name),'','',struct('calcMD5',false));
+                SubjStruct(iCC).(examDir{iF}).Images(iD).descrip    = ExamDirContent(iD).name;
                 
                 end
             else
@@ -44,10 +46,10 @@ for iLL = 1:length(DynScanContent),
             MatDirContent = dir(fullfile(subjFolder,DynScanContent(iLL).name,examDir{iF},'*.mat'));
             if ~isempty(ExamDirContent),
                 fprintf('');
-                for iD = 1:length(MatDirContent);
-                SubjStruct(iLL).(examDir{iF}).DicomDetails(iD).filename = fullfile(subjFolder,...
+                for iD = 1:length(MatDirContent),
+                SubjStruct(iCC).(examDir{iF}).DicomDetails(iD).filename = fullfile(subjFolder,...
                     DynScanContent(iLL).name,examDir{iF},MatDirContent(iD).name);
-                SubjStruct(iLL).(examDir{iF}).DicomDetails(iD).Content  = load(SubjStruct(iLL).(examDir{iF}).DicomDetails(iD).filename);
+                SubjStruct(iCC).(examDir{iF}).DicomDetails(iD).Content  = load(SubjStruct(iCC).(examDir{iF}).DicomDetails(iD).filename);
                 
                 end
             else
@@ -55,10 +57,10 @@ for iLL = 1:length(DynScanContent),
             end
                 
         end
-        fprintf('\n - Subj %s done',DynScanContent(iLL).name);
+        fprintf('\n - Subj %s done\n',DynScanContent(iLL).name);
         
     else
-        fprintf('\n Subj %s does not have the three folders',DynScanContent(iLL).name);
+        fprintf('\n Subj %s does not have the three folders\n',DynScanContent(iLL).name);
     end
     
 end

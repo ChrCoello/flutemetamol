@@ -60,6 +60,9 @@ for iLL = 1:length(DynScanContent),
     subjectFolder = fullfile(conversionFolder,subjName,'fdg');
     if ~exist(subjectFolder,'dir'),
         mkdir(subjectFolder);
+    else
+        system(sprintf('rm -fR %s',subjectFolder));
+        mkdir(subjectFolder);
     end
     %
     SubjDirContent = dir(fullfile(imagesDirFDG,DynScanContent(iLL).name));
@@ -76,7 +79,7 @@ for iLL = 1:length(DynScanContent),
                 DynScanContent(iLL).name,SubjDirContent(iK).name);
             ImConvertOptions.OutputFiles.filesPath = subjectFolder;
             ImConvertOptions.InputFiles.filenames       = {DicomFilesACContent(:).name};
-            ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_Dyn_AC',subjName);
+            ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_Static_AC',subjName);
             
             %
             fprintf('\nChecking Dicom headers for AC dynamic scans for subj %s\n',subjName);
@@ -170,7 +173,7 @@ for iLL = 1:length(DynScanContent),
                 DynScanContent(iLL).name,SubjDirContent(iK).name);
             ImConvertOptions.OutputFiles.filesPath = subjectFolder;
             ImConvertOptions.InputFiles.filenames       = {DicomFilesACContent(:).name};
-            ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_Dyn_NAC',subjName);
+            ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_Static_NAC',subjName);
             
             if ~(exist(fullfile(ImConvertOptions.OutputFiles.filesPath,'DicomDetailsNAC.mat'),'file') &&...
                     exist(fullfile(ImConvertOptions.OutputFiles.filesPath,...
