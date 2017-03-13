@@ -1,4 +1,4 @@
-function SubjStruct = realignFrames_StudyLevel(SubjStruct)
+function SubjStruct = realignFramesNoReftoRefIm_StudyLevel(SubjStruct)
 %
 OptionsRD.imageWrite = 'force';
 OptionsRD.refFrameNo = 1;
@@ -10,19 +10,19 @@ for iW = 1:length(SubjStruct),
     fprintf('\nprocessing subject %s\n',SubjStruct(iW).subjID);
     if isfield(SubjStruct,'flut'),
         %
-        if isfield(SubjStruct(iW),'mri'),
-            refImOrig = nifti2niftiPair(SubjStruct(iW).mri.Images(strcmp({SubjStruct(iW).mri.Images(:).descrip},'T1.nii')).ImageDetails,OptionsRD);
-            refIm = refImOrig; %stripSpatialInfoFromNifti(refImOrig,'T1_stripped',OptionsRD);
-        else
-            refIm = '';
-        end
+%         if isfield(SubjStruct(iW),'mri'),
+%             refImOrig = nifti2niftiPair(SubjStruct(iW).mri.Images(strcmp({SubjStruct(iW).mri.Images(:).descrip},'T1.nii')).ImageDetails,OptionsRD);
+%             refIm = refImOrig; %stripSpatialInfoFromNifti(refImOrig,'T1_stripped',OptionsRD);
+%         else
+%             refIm = '';
+%         end
         %
-        idxDynAC = find(~cellfun('isempty',strfind({SubjStruct(iW).flut.Images(:).descrip},'PETACDyn')));
+        idxDynAC = find(~cellfun('isempty',strfind({SubjStruct(iW).flut.Images(:).descrip},'Dyn_AC.nii')));
         %
         dynamicPETfilename_NiiPair = nifti2niftiPair(SubjStruct(iW).flut.Images(idxDynAC).ImageDetails,OptionsNP);
         %
         outFileName = fullfile(dynamicPETfilename_NiiPair.path,...
-            ['ra' dynamicPETfilename_NiiPair.imageName '.hdr']);
+            ['ra' dynamicPETfilename_NiiPair.imageName '_nonRegMRI.hdr']);
         %             if exist(outFileName,'file'),
         %                 deleteImage(outFileName);
         %             end
@@ -31,18 +31,19 @@ for iW = 1:length(SubjStruct),
             % Correcting motion in subject
             fprintf('\ncorrecting motion of image %s - subject %s\n',SubjStruct(iW).flut.Images(idxDynAC).descrip,SubjStruct(iW).subjID);
             
-            SubjStruct(iW).flut.Images(end+1).ImageDetails = MIAKAT_realignDynamic(dynamicPETfilename_NiiPair,refIm,'','',OptionsRD);
-            SubjStruct(iW).flut.Images(end).descrip = 'realignDynamic';
+            SubjStruct(iW).flut.Images(end+1).ImageDetails = MIAKAT_realignDynamic(dynamicPETfilename_NiiPair,'',...
+                '',['ra' dynamicPETfilename_NiiPair.imageName '_nonRegMRI'],OptionsRD);
+            SubjStruct(iW).flut.Images(end).descrip = 'realignDynamic_nonRegMRI';
             fprintf('correcting motion in subject %s - done\n',SubjStruct(iW).subjID);
         else
             fprintf('\nskipping motion in subject %s - already done\n',SubjStruct(iW).subjID);
             SubjStruct(iW).flut.Images(end+1).ImageDetails = processImageInput(outFileName,'','',struct('calcMD5',false));
-            SubjStruct(iW).flut.Images(end).descrip = 'realignDynamic';
+            SubjStruct(iW).flut.Images(end).descrip = 'realignDynamic_nonRegMRI';
         end
         deleteImage(dynamicPETfilename_NiiPair);
         %
         outFileNameStatic = fullfile(dynamicPETfilename_NiiPair.path,...
-            ['ra' dynamicPETfilename_NiiPair.imageName '_add_f0_f4.hdr']);
+            ['ra' dynamicPETfilename_NiiPair.imageName '_nonRegMRI_add_f0_f4.hdr']);
         if ~exist(outFileNameStatic,'file'),%raD10030_Dyn_AC_add_f0_f4
             fprintf('\nadd image of image %s - subject %s\n',SubjStruct(iW).flut.Images(idxDynAC).descrip,SubjStruct(iW).subjID);
             SubjStruct(iW).flut.Images(end+1).ImageDetails = MIAKAT_makeIntegralImages(SubjStruct(iW).flut.Images(end).ImageDetails);

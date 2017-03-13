@@ -1,4 +1,4 @@
-function batchConvertOSLOnifti_FDG(imagesDirFDG)
+function batchConvertOSLOnifti_FDG_dec16(imagesDirFDG)
 % This function would prepare the subject specific folder preivous to analysis
 % It will : 
 % - transform FDG DICOM to Nifti files and copy them in the subject specific folder FDG
@@ -8,7 +8,7 @@ function batchConvertOSLOnifti_FDG(imagesDirFDG)
 % if ~exist(fullfile(imagesDir,'NiftiConversion'),'dir'),
 %     mkdir(imagesDir,'NiftiConversion');
 % end
-conversionFolder = '/data/OSLO/Flutemetamol/data';%fullfile(imagesDir,'NiftiConversion');
+conversionFolder = '/data/OSLO/Flutemetamol/dataDec16';%fullfile(imagesDir,'NiftiConversion');
 
 ImConvertOptions.OutputFiles.logTextFilename = '';
 % ImConvertOptions.OutputFiles.filenamesStem = '';
@@ -45,15 +45,14 @@ ImConvertOptions.LogOptions.sectionTitle = '';
 ImagesDirContent = dir(imagesDirFDG);
 iC = 0;
 for iL=1:length(ImagesDirContent);
-    if ImagesDirContent(iL).isdir &...
-            (logical(strfind(ImagesDirContent(iL).name,'Discovery690'))),
+    if ImagesDirContent(iL).isdir & logical(strfind(ImagesDirContent(iL).name,'FDGPET')),
         iC = iC+1;
         DynScanContent(iC) = ImagesDirContent(iL);
     end
 end
 for iLL = 1:length(DynScanContent),
     %
-    idxUndr  = strfind(DynScanContent(iLL).name,'_');
+    idxUndr  = strfind(DynScanContent(iLL).name,'-');
     subjName = DynScanContent(iLL).name(1:idxUndr-1);
     if ~exist(fullfile(conversionFolder,subjName),'dir'),
         mkdir(conversionFolder,subjName);
@@ -66,28 +65,30 @@ for iLL = 1:length(DynScanContent),
         mkdir(subjectFolder);
     end
     %
-    SubjDirContent = dir(fullfile(imagesDirFDG,DynScanContent(iLL).name));
+    SubjDirContent = dir(fullfile(imagesDirFDG,DynScanContent(iLL).name,'SCANS'));
+    SubjDirContent(1:2) = [];
+    scanDir = fullfile(imagesDirFDG,DynScanContent(iLL).name,'SCANS');
     %
     for iK = 1:length(SubjDirContent),
-        if SubjDirContent(iK).isdir & logical(strfind(SubjDirContent(iK).name,'PET_3D_AC')),
-            DicomFilesACContent = dir(fullfile(imagesDirFDG,...
-                DynScanContent(iLL).name,SubjDirContent(iK).name,'*.dcm'));
+        if SubjDirContent(iK).isdir,
+            DicomFilesACContent = dir(fullfile(scanDir,...
+                SubjDirContent(iK).name,'DICOM','*.dcm'));
             if isempty(DicomFilesACContent),
                 error('wdfasdg');
             end
             
-            ImConvertOptions.InputFiles.filesPath  = fullfile(imagesDirFDG,...
-                DynScanContent(iLL).name,SubjDirContent(iK).name);
+            ImConvertOptions.InputFiles.filesPath  = fullfile(scanDir,...
+                SubjDirContent(iK).name,'DICOM');
             ImConvertOptions.OutputFiles.filesPath = subjectFolder;
             ImConvertOptions.InputFiles.filenames       = {DicomFilesACContent(:).name};
-            ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_Static_AC',subjName);
+            ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_serie%s',subjName,SubjDirContent(iK).name);
             
             %
             fprintf('\nChecking Dicom headers for AC dynamic scans for subj %s\n',subjName);
             %
             [ImConvertOptions.InputFiles,consistent,cancelled,DicomDetails] = ...
                 readAndCheckDicomHeaders(ImConvertOptions.InputFiles);
-            save(fullfile(ImConvertOptions.OutputFiles.filesPath,'DicomDetailsAC.mat'),'DicomDetails');
+            save(fullfile(ImConvertOptions.OutputFiles.filesPath,'DicomDetails.mat'),'DicomDetails');
             %
             if ~consistent,
                 error('DICOM files of folder % not consitent',ImConvertOptions.InputFiles.filesPath);
@@ -163,44 +164,44 @@ for iLL = 1:length(DynScanContent),
         
         
         
-        if SubjDirContent(iK).isdir & logical(strfind(SubjDirContent(iK).name,'PET_3D_NAC')),
-            DicomFilesACContent = dir(fullfile(imagesDirFDG,...
-                DynScanContent(iLL).name,SubjDirContent(iK).name,'*.dcm'));
-            if isempty(DicomFilesACContent),
-                error('wdfasdg');
-            end
-            
-            ImConvertOptions.InputFiles.filesPath  = fullfile(imagesDirFDG,...
-                DynScanContent(iLL).name,SubjDirContent(iK).name);
-            ImConvertOptions.OutputFiles.filesPath = subjectFolder;
-            ImConvertOptions.InputFiles.filenames       = {DicomFilesACContent(:).name};
-            ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_Static_NAC',subjName);
-            
-            if ~(exist(fullfile(ImConvertOptions.OutputFiles.filesPath,'DicomDetailsNAC.mat'),'file') &&...
-                    exist(fullfile(ImConvertOptions.OutputFiles.filesPath,...
-                    [ImConvertOptions.OutputFiles.filenamesStem '.nii']),'file')),
-            fprintf('\nChecking Dicom headers for NAC dynamic scans for subj %s\n',subjName);
-            %
-            [ImConvertOptions.InputFiles,consistent,cancelled,DicomDetails] = ...
-                readAndCheckDicomHeaders(ImConvertOptions.InputFiles);
-            save(fullfile(ImConvertOptions.OutputFiles.filesPath,'DicomDetailsNAC.mat'),'DicomDetails');
-            %
-            if ~consistent,
-                error('DICOM files of folder % not consitent',ImConvertOptions.InputFiles.filesPath);
-            end
-            %
-            %
-            fprintf('\nConverting subj %s , dynamic NAC from Dicom to Nifti\n',subjName);
-            ImConvertOptions.ConvOptions.OutputDims.dimensions = DicomDetails.seriesImageDims;
-            imConvertLinuxBox(ImConvertOptions);
-            %
-            %Move image
-            moveImage(fullfile(ImConvertOptions.InputFiles.filesPath,[ImConvertOptions.OutputFiles.filenamesStem '.nii']),...
-                ImConvertOptions.OutputFiles.filesPath,[ImConvertOptions.OutputFiles.filenamesStem '.nii'],true);
-            else
-                fprintf('\nSkipping subj %s NAC\n',subjName);
-            end
-        end
+%         if SubjDirContent(iK).isdir & logical(strfind(SubjDirContent(iK).name,'PET_3D_NAC')),
+%             DicomFilesACContent = dir(fullfile(imagesDirFDG,...
+%                 DynScanContent(iLL).name,SubjDirContent(iK).name,'*.dcm'));
+%             if isempty(DicomFilesACContent),
+%                 error('wdfasdg');
+%             end
+%             
+%             ImConvertOptions.InputFiles.filesPath  = fullfile(imagesDirFDG,...
+%                 DynScanContent(iLL).name,SubjDirContent(iK).name);
+%             ImConvertOptions.OutputFiles.filesPath = subjectFolder;
+%             ImConvertOptions.InputFiles.filenames       = {DicomFilesACContent(:).name};
+%             ImConvertOptions.OutputFiles.filenamesStem  = sprintf('%s_Static_NAC',subjName);
+%             
+%             if ~(exist(fullfile(ImConvertOptions.OutputFiles.filesPath,'DicomDetailsNAC.mat'),'file') &&...
+%                     exist(fullfile(ImConvertOptions.OutputFiles.filesPath,...
+%                     [ImConvertOptions.OutputFiles.filenamesStem '.nii']),'file')),
+%             fprintf('\nChecking Dicom headers for NAC dynamic scans for subj %s\n',subjName);
+%             %
+%             [ImConvertOptions.InputFiles,consistent,cancelled,DicomDetails] = ...
+%                 readAndCheckDicomHeaders(ImConvertOptions.InputFiles);
+%             save(fullfile(ImConvertOptions.OutputFiles.filesPath,'DicomDetailsNAC.mat'),'DicomDetails');
+%             %
+%             if ~consistent,
+%                 error('DICOM files of folder % not consitent',ImConvertOptions.InputFiles.filesPath);
+%             end
+%             %
+%             %
+%             fprintf('\nConverting subj %s , dynamic NAC from Dicom to Nifti\n',subjName);
+%             ImConvertOptions.ConvOptions.OutputDims.dimensions = DicomDetails.seriesImageDims;
+%             imConvertLinuxBox(ImConvertOptions);
+%             %
+%             %Move image
+%             moveImage(fullfile(ImConvertOptions.InputFiles.filesPath,[ImConvertOptions.OutputFiles.filenamesStem '.nii']),...
+%                 ImConvertOptions.OutputFiles.filesPath,[ImConvertOptions.OutputFiles.filenamesStem '.nii'],true);
+%             else
+%                 fprintf('\nSkipping subj %s NAC\n',subjName);
+%             end
+%         end
         
     end
     

@@ -1,4 +1,4 @@
-function SubjStruct = realignFDGtoFlut_StudyLevel(SubjStruct)
+function SubjStruct = realignFDGtoFlut_StudyLevel_dec16(SubjStruct)
 %
 OptionsRD.imageWrite = 'force';
 
@@ -10,8 +10,9 @@ for iW = 1:length(SubjStruct),
     
     if isfield(SubjStruct(iW),'flut') & isfield(SubjStruct(iW),'fdg'),
         
-        if exist(SubjStruct(iW).fdg.Images(~cellfun('isempty',strfind({SubjStruct(iW).fdg.Images(:).descrip},'Static_AC.nii'))).ImageDetails.fullImageDataFilename,'file'),
-            fdgNiiPair = nifti2niftiPair(SubjStruct(iW).fdg.Images(~cellfun('isempty',strfind({SubjStruct(iW).fdg.Images(:).descrip},'Static_AC.nii'))).ImageDetails,OptionsRD);
+        if exist(SubjStruct(iW).fdg.Images(~cellfun('isempty',strfind({SubjStruct(iW).fdg.Images(:).descrip},'serie6.nii'))).ImageDetails.fullImageDataFilename,'file'),
+            
+            fdgNiiPair = nifti2niftiPair(SubjStruct(iW).fdg.Images(~cellfun('isempty',strfind({SubjStruct(iW).fdg.Images(:).descrip},'serie6.nii'))).ImageDetails,OptionsRD);
         else
             fprintf('\nmissing fdg image for subject %s\n',SubjStruct(iW).subjID);
             continue
@@ -19,12 +20,12 @@ for iW = 1:length(SubjStruct),
         if any(strcmp('addImage',{SubjStruct(iW).flut.Images(:).descrip})),
             flutNiiPair = SubjStruct(iW).flut.Images(strcmp('addImage',{SubjStruct(iW).flut.Images(:).descrip})).ImageDetails;
         else
-            if exist(SubjStruct(iW).flut.Images(~cellfun('isempty',strfind({SubjStruct(iW).flut.Images(:).descrip},'_AC_add_f0_f4.hdr'))).ImageDetails.fullImageDataFilename,'file'),
+            if exist(SubjStruct(iW).flut.Images(~cellfun('isempty',strfind({SubjStruct(iW).flut.Images(:).descrip},'_add_f0_f4.hdr'))).ImageDetails.fullImageDataFilename,'file'),
                 
                 flutNiiPair = processImageInput(SubjStruct(iW).flut.Images(~cellfun('isempty',strfind({SubjStruct(iW).flut.Images(:).descrip},'_AC_add_f0_f4.hdr'))).ImageDetails,'','',struct('calcMD5','false'));
             else
                 FlutDirContent = dir(SubjStruct(iW).flut.Images(1).ImageDetails.path);
-                idxStaticFlt = find(~cellfun('isempty',strfind({FlutDirContent(:).name},'_AC_add_f0_f4.hdr')));
+                idxStaticFlt = find(~cellfun('isempty',strfind({FlutDirContent(:).name},'_add_f0_f4.hdr')));
                 if ~isempty(idxStaticFlt),
                 flutNiiPair = processImageInput(fullfile(SubjStruct(iW).flut.Images(1).ImageDetails.path,FlutDirContent(idxStaticFlt).name),'','',struct('calcMD5','false'));
                 else

@@ -1,4 +1,4 @@
-function SubjStruct = realignFDGtoFlut_StudyLevel(SubjStruct)
+function SubjStruct = applyWarp(SubjStruct)
 %
 OptionsRD.imageWrite = 'force';
 
@@ -11,6 +11,7 @@ for iW = 1:length(SubjStruct),
     if isfield(SubjStruct(iW),'flut') & isfield(SubjStruct(iW),'fdg'),
         
         if exist(SubjStruct(iW).fdg.Images(~cellfun('isempty',strfind({SubjStruct(iW).fdg.Images(:).descrip},'Static_AC.nii'))).ImageDetails.fullImageDataFilename,'file'),
+            
             fdgNiiPair = nifti2niftiPair(SubjStruct(iW).fdg.Images(~cellfun('isempty',strfind({SubjStruct(iW).fdg.Images(:).descrip},'Static_AC.nii'))).ImageDetails,OptionsRD);
         else
             fprintf('\nmissing fdg image for subject %s\n',SubjStruct(iW).subjID);

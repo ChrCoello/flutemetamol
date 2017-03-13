@@ -1,4 +1,4 @@
-function [SubjStruct]=checkSubjData(subjFolder)
+function [SubjStruct]=checkSubjTmpData(subjFolder)
 % This function would check each subject folder if content is there and in
 % good shape.
 % ----------------------------------------------------------
@@ -26,11 +26,11 @@ for iLL = 1:length(DynScanContent),
     %
     [isImgDir,idxDir]=ismember(examDir,{SubjDirContent(:).name});
     %
-    if all(isImgDir),
+    if isImgDir==[1 1 0],
         fprintf('\n - Subj %s does have the three folders\n',DynScanContent(iLL).name);
         iCC = iCC+1;
         SubjStruct(iCC).subjID = DynScanContent(iLL).name;
-        for iF = 1:length(examDir),
+        for iF = 1:3,
             ExamDirContent = dir(fullfile(subjFolder,DynScanContent(iLL).name,examDir{iF},'*.nii'));
             if ~isempty(ExamDirContent),
                 fprintf('');
